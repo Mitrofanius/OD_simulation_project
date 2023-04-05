@@ -1,5 +1,6 @@
 import numpy
 import quadprog
+import torch
 
 # taken from https://scaron.info/blog/quadratic-programming-in-python.html
 
@@ -15,3 +16,4 @@ def quadprog_solve_qp(P, q, G, h, A=None, b=None):
         qp_b = -h
         meq = 0
     return quadprog.solve_qp(qp_G, qp_a, qp_C, qp_b, meq)[0]
+

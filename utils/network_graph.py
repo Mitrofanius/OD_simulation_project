@@ -10,13 +10,19 @@ ProbOverElements = namedtuple("ProbOverElements", "elements prob_distr")
 class DirectedGraph:
     """
     takes a graph ->
-    generates different traffic assignmentMatrices
+    generates different possible traffic assignment matrices
     """
 
     def __init__(self, gdict:dict=None, default_cost:int=1):
         self.default_cost = default_cost
-        self.gdict, self.nodes, self.edges, self.edge_costs = self._build_graph(gdict)
+
+        if gdict != None:
+            self.gdict, self.nodes, self.edges, self.edge_costs = self._build_graph(gdict)
         self._od_prob_dict = {}
+
+    def get_original_graph_repr(self):
+        return self.gdict
+        
     
     def _build_graph(self, gdict: dict):
         # function seemingly creates some redundant data structures
@@ -28,6 +34,7 @@ class DirectedGraph:
 
         for node, neighbours in gdict.items():
             nodes.add(node)
+            
             for neighbour in neighbours:
                 if isinstance(neighbour, int):
                     cost = self.default_cost
@@ -245,10 +252,18 @@ class DirectedGraph:
         A = np.zeros((A_rows, A_columns))
         for ij in range(A_rows):
             for od in range(A_columns):
-                if links[ij] in paths[od]:
+                # if links[ij] in paths[od]:
+                if self.check_subpath(links[ij], paths[od]):
                     A[ij, od] = 1
 
         return A
+    
+    def check_subpath(self, sub, path):
+        length = len(path)
+        for i, elem in enumerate(path):
+            if elem == sub[0] and i < length - 1 and path[i+1] == sub[1]:
+                return True
+        return False
 
 
     def generate_od_assignment_matrix(self):
@@ -359,11 +374,62 @@ class DirectedGraph:
         return list(map(self.path_to_str, sorted(self.edge_costs.keys())))
 
     def path_to_str(self, path:list):
-        return "".join(map(str, path))
+        # return "".join(map(str, path))
+        return tuple(path)
 
     
 
-   
+# examples of graphs and a function to create grid-type n by n graphs
+
+def create_nxn_graph(n):
+    graph_dict = defaultdict(list)
+
+    # edges of the grid
+    graph_dict[n ** 2 - n + 1].append(n ** 2 - n + 2)
+    graph_dict[n ** 2 - n + 1].append(n ** 2 - 2 * n + 1)
+
+    graph_dict[n ** 2].append(n ** 2 - 1)
+    graph_dict[n ** 2].append(n ** 2 - n)
+
+    graph_dict[1].append(n + 1)
+    graph_dict[1].append(1 + 1)
+
+    graph_dict[n].append(n - 1)
+    graph_dict[n].append(n + n)
+
+    # vertical borders of the grid
+    for i in range(1 + n, n ** 2 - n, n):
+        graph_dict[i].append(i + n)
+        graph_dict[i].append(i - n)
+        graph_dict[i].append(i + 1)
+
+    for i in range(2*n, n ** 2 , n):
+        graph_dict[i].append(i + n)
+        graph_dict[i].append(i - n)
+        graph_dict[i].append(i - 1)
+
+    # inside the grid
+    for j in range(1, n - 1):
+        real_j = n + 2 + (j - 1) * n
+        for i in range(n - 2):
+            graph_dict[real_j + i].append(real_j + i + 1)
+            graph_dict[real_j + i].append(real_j + i - 1)     
+            graph_dict[real_j + i].append(real_j + i + n)
+            graph_dict[real_j + i].append(real_j + i - n)
+    
+    # horizontal borders
+    for i in range(2, n):
+        graph_dict[i].append(i + 1)
+        graph_dict[i].append(i - 1)     
+        graph_dict[i].append(i + n)
+
+    for i in range(n**2 - n + 2, n ** 2):
+        graph_dict[i].append(i + 1)
+        graph_dict[i].append(i - 1)     
+        graph_dict[i].append(i - n)
+
+    return graph_dict
+
 graph_dict_5_nodes = { 
    1 : [(2, 1), (3, 1)],
    2 : [1, 4],
@@ -401,7 +467,23 @@ graph_dict_3x3_2 = {
    9 : [8, 6]
 }
 
+
+graph_dict_8x8_2 = { 
+   1 : [4, 2],
+   2 : [1, 5, 3],
+   3 : [2, 6],
+   4 : [1, 5, 7],
+   5 : [2, 4, 8, 6],
+   6 : [3, 5, 9],
+   7 : [4, 8],
+   8 : [5, 7, 9],
+   9 : [8, 6]
+}
+
+
 if __name__ == "__main__":
+    # some tests used during implementation
+
     # G = DirectedGraph(graph_dict_3x3)
     G = DirectedGraph(graph_dict_4_nodes)
     # print(G.edges)
@@ -410,12 +492,6 @@ if __name__ == "__main__":
     # print(len(G.get_od_pairs()))
 
     # print("od_paths", G.get_od_paths())
-
-
-    # generate assignment matrix:
-    # 1) disribution over od pairs
-    #    which defines the fraction of O-flow x_o for the involved OD flows s_od
-    # 2) For each given OD pair od ∈ L_OD: distribution over paths
 
     # print(G.get_distr_o_over_od())
     # print(G.get_path_costs())
@@ -430,8 +506,8 @@ if __name__ == "__main__":
 
     # print(G.create_incidence_matrix())
 
-    print(G.generate_od_assignment_matrix())
-    print(G.generate_o_assignment_matrix())
+    # print(G.generate_od_assignment_matrix())
+    # print(G.generate_o_assignment_matrix())
 
     # print(G.create_incidence_matrix())
     # print(G.get_distr_od_over_paths())
