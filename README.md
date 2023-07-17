@@ -1,10 +1,11 @@
 # OD Simulation
 
-
 ## Description
 Origin-Destination Flow Estimation from link flows (no prior infromation).
 An attempt to implement an "Algorithm 1" (so far only the single step model) from  
-*Xia, Jingyuan, Wei Dai, John Polak, and Michel Bierlaire. "Dimension Reduction for Origin-Destination Flow Estimation: Blind Estimation Made Possible." arXiv preprint arXiv:1810.06077 (2018)*.
+[*Xia, Jingyuan, Wei Dai, John Polak, and Michel Bierlaire. "Dimension Reduction for Origin-Destination Flow Estimation: Blind Estimation Made Possible." arXiv preprint arXiv:1810.06077 (2018)*.](https://arxiv.org/abs/1810.06077)
+
+![alt text](https://github.com/Mitrofanius/OD_simulation_project/blob/main/image.png)
 
 ## Project structure
 *./utils/network_graph.py* : here you can find a class capable of accepting a graph in form of a python dictionary and generating traffic assignment matrix for o-flows model according to a description in the article mentioned above.
